@@ -2,7 +2,7 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
-Интеграция Home Assistant для управления [пеллетными котлами фирмы Слон](https://www.slonkirov.ru/) через MQTT с поддержкой Bluetooth-соединения. Разработана для работы с котлами, которые управляются через специальное приложение с MQTT-брокером.
+Интеграция Home Assistant для управления [пеллетными котлами фирмы Слон](https://www.slonkirov.ru/) через MQTT с поддержкой Bluetooth-соединения. Разработана для работы с котлами, которые управляются через [специальное приложение](https://github.com/markovrv/kotel_mqtt_service) с MQTT-брокером.
 
 ## Особенности
 
