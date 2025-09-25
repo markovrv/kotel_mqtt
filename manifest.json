@@ -1,0 +1,11 @@
+{
+  "domain": "kotel_mqtt",
+  "name": "Kotel MQTT Integration",
+  "documentation": "https://github.com/markovrv/kotel_mqtt",
+  "dependencies": ["mqtt"],
+  "codeowners": ["@markovrv"],
+  "requirements": ["aiohttp"],
+  "version": "1.0.0",
+  "config_flow": false,
+  "iot_class": "local_polling"
+}
