@@ -112,6 +112,424 @@ automation:
           message: "Котел потерял Bluetooth соединение!"
 ```
 
+## Панели
+
+Пример панели для отображения параметров котла
+
+```yaml
+views:
+  - title: Пеллетный котёл
+    icon: mdi:fire
+    cards: []
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            heading: Статус котла
+          - type: horizontal-stack
+            cards:
+              - type: glance
+                entities:
+                  - entity: select.rezhim_raboty_kotla
+                    name: Режим
+                  - entity: sensor.temperatura_kotla
+                    name: Температура
+                  - entity: sensor.uroven_plameni
+                    name: Пламя
+                  - entity: sensor.status_bluetooth
+                    name: Bluetooth
+          - type: horizontal-stack
+            cards:
+              - show_name: true
+                show_icon: true
+                type: button
+                name: Выкл.
+                icon: mdi:power-off
+                tap_action:
+                  action: perform-action
+                  target:
+                    entity_id:
+                      - select.rezhim_raboty_kotla
+                  data:
+                    option: Стоп
+                  perform_action: select.select_option
+                hold_action:
+                  action: more-info
+                icon_height: 30px
+                entity: select.rezhim_raboty_kotla
+              - show_name: true
+                show_icon: true
+                type: button
+                name: Ручной
+                icon: mdi:account-cog
+                tap_action:
+                  action: perform-action
+                  target:
+                    entity_id:
+                      - select.rezhim_raboty_kotla
+                  data:
+                    option: Ручной
+                  perform_action: select.select_option
+                hold_action:
+                  action: more-info
+                icon_height: 30px
+                entity: select.rezhim_raboty_kotla
+              - show_name: true
+                show_icon: true
+                type: button
+                name: Авто
+                icon: mdi:robot
+                tap_action:
+                  action: perform-action
+                  target:
+                    entity_id:
+                      - select.rezhim_raboty_kotla
+                  data:
+                    option: Авто
+                  perform_action: select.select_option
+                hold_action:
+                  action: more-info
+                icon_height: 30px
+                entity: select.rezhim_raboty_kotla
+              - show_name: true
+                show_icon: true
+                type: button
+                entity: switch.rozzhig_kotla
+                name: Розжиг
+            visibility:
+              - condition: state
+                entity: sensor.status_bluetooth
+                state: Подключено
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: sensor.status_bluetooth
+                state_not: Подключено
+            card:
+              type: markdown
+              content: >
+                ## 🛑 Режим: **НЕДОСТУПЕН**
+
+                Котёл отключен от сервера. Возможно, выключен, или потерял
+                связь. Если котёл включен, попробуйте **переподключить
+                Bluetooth**.
+          - type: conditional
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: sensor.status_bluetooth
+                    state: Подключено
+                  - condition: state
+                    entity: select.rezhim_raboty_kotla
+                    state: Стоп
+            card:
+              type: markdown
+              content: |
+                ## 🛑 Режим: **ВЫКЛЮЧЕН**
+                Котел полностью остановлен. Все функции отключены.
+          - type: conditional
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: select.rezhim_raboty_kotla
+                    state: Ручной
+                  - condition: state
+                    entity: sensor.status_bluetooth
+                    state: Подключено
+            card:
+              type: markdown
+              content: |
+                ## 👤 Режим: **РУЧНОЙ**
+                Ручное управление параметрами.
+          - type: conditional
+            conditions:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: select.rezhim_raboty_kotla
+                    state: Авто
+                  - condition: state
+                    entity: sensor.status_bluetooth
+                    state: Подключено
+            card:
+              type: markdown
+              content: >
+                ## 🤖 Режим: **АВТОМАТИЧЕСКИЙ**
+
+                Котел работает по программе. Установите температуру
+                стабилизации.
+          - type: tile
+            entity: button.perepodkliuchit_bluetooth
+            features_position: bottom
+            vertical: false
+            grid_options:
+              columns: 12
+              rows: 1
+            show_entity_picture: false
+            visibility:
+              - condition: and
+                conditions:
+                  - condition: state
+                    entity: select.rezhim_raboty_kotla
+                    state: Стоп
+                  - condition: state
+                    entity: sensor.status_bluetooth
+                    state: Подключено
+      - type: grid
+        cards:
+          - type: heading
+            heading: Настройка котла
+            heading_style: title
+          - type: tile
+            entity: button.perepodkliuchit_bluetooth
+            features_position: bottom
+            vertical: false
+            grid_options:
+              columns: 12
+              rows: 1
+            show_entity_picture: false
+        visibility:
+          - condition: state
+            entity: sensor.status_bluetooth
+            state_not: Подключено
+      - type: grid
+        cards:
+          - type: heading
+            heading: Настройки котла
+            heading_style: title
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.rezhim_raboty_kotla
+                state: Авто
+            card:
+              square: true
+              type: grid
+              columns: 3
+              cards:
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:thermometer-minus
+                  tap_action:
+                    action: perform-action
+                    data:
+                      param: '0015'
+                      delta: -1
+                    perform_action: kotel_mqtt.change_parameter
+                    target: {}
+                - graph: line
+                  type: sensor
+                  entity: number.temperatura_stabilizatsii
+                  detail: 1
+                  name: Термостат
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:thermometer-plus
+                  tap_action:
+                    action: perform-action
+                    data:
+                      param: '0015'
+                      delta: 1
+                    perform_action: kotel_mqtt.change_parameter
+                    target: {}
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.rezhim_raboty_kotla
+                state: Ручной
+            card:
+              square: true
+              type: grid
+              columns: 3
+              cards:
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:thermometer-minus
+                  tap_action:
+                    action: perform-action
+                    data:
+                      param: '0004'
+                      delta: -1
+                    perform_action: kotel_mqtt.change_parameter
+                    target: {}
+                - graph: line
+                  type: sensor
+                  entity: number.ustanovka_termostata
+                  detail: 1
+                  name: Термостат
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:thermometer-plus
+                  tap_action:
+                    action: perform-action
+                    data:
+                      param: '0004'
+                      delta: 1
+                    perform_action: kotel_mqtt.change_parameter
+                    target: {}
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.rezhim_raboty_kotla
+                state: Ручной
+            card:
+              type: grid
+              columns: 3
+              cards:
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:minus
+                  tap_action:
+                    action: call-service
+                    service: kotel_mqtt.change_parameter
+                    data:
+                      param: '0001'
+                      delta: -1
+                - graph: line
+                  type: sensor
+                  entity: number.podacha_topliva
+                  detail: 1
+                  name: Подача
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:plus
+                  tap_action:
+                    action: call-service
+                    service: kotel_mqtt.change_parameter
+                    data:
+                      param: '0001'
+                      delta: 1
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.rezhim_raboty_kotla
+                state: Ручной
+            card:
+              type: grid
+              columns: 3
+              cards:
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:minus
+                  tap_action:
+                    action: call-service
+                    service: kotel_mqtt.change_parameter
+                    data:
+                      param: '0002'
+                      delta: -1
+                - graph: line
+                  type: sensor
+                  entity: number.pauza
+                  detail: 1
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:plus
+                  tap_action:
+                    action: call-service
+                    service: kotel_mqtt.change_parameter
+                    data:
+                      param: '0002'
+                      delta: 1
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: select.rezhim_raboty_kotla
+                state: Ручной
+            card:
+              type: grid
+              columns: 3
+              cards:
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:minus
+                  tap_action:
+                    action: call-service
+                    service: kotel_mqtt.change_parameter
+                    data:
+                      param: '0003'
+                      delta: -1
+                - graph: line
+                  type: sensor
+                  entity: number.skorost_ventiliatora
+                  detail: 1
+                  name: Вентилятор
+                - show_name: true
+                  show_icon: true
+                  type: button
+                  icon: mdi:plus
+                  tap_action:
+                    action: call-service
+                    service: kotel_mqtt.change_parameter
+                    data:
+                      param: '0003'
+                      delta: 1
+          - graph: line
+            type: sensor
+            entity: sensor.nomer_tochki_avtomata
+            visibility:
+              - condition: state
+                entity: select.rezhim_raboty_kotla
+                state: Авто
+            detail: 1
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: tile
+            entity: button.perepodkliuchit_bluetooth
+            features_position: bottom
+            vertical: false
+            grid_options:
+              columns: 12
+              rows: 1
+            show_entity_picture: false
+        visibility:
+          - condition: and
+            conditions:
+              - condition: state
+                entity: select.rezhim_raboty_kotla
+                state_not: Стоп
+              - condition: state
+                entity: sensor.status_bluetooth
+                state: Подключено
+      - type: grid
+        cards:
+          - type: heading
+            heading: Графики
+            heading_style: title
+          - type: vertical-stack
+            cards:
+              - type: history-graph
+                entities:
+                  - entity: sensor.temperatura_kotla
+                    name: Температура
+                hours_to_show: 24
+                refresh_interval: 0
+          - type: vertical-stack
+            cards:
+              - type: history-graph
+                entities:
+                  - entity: sensor.uroven_plameni
+                    name: Уровень пламени
+                hours_to_show: 24
+                refresh_interval: 0
+    header: {}
+    badges: []
+    max_columns: 2
+```
+
 ## Поддержка
 
 Если у вас возникли проблемы или вопросы:
